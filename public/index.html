@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage your finances with Personal Budget, a free app that tracks spending and helps stay within budget. Get alerts, see results, and enjoy financial freedom without any cost.">
+    <title>Personal Budget</title>
+    <meta name="keywords" content="app free budget finance">
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="main.css">
+    <style>
+        /* D3 Chart Styles */
+        .d3-chart-container {
+            width: 400px;
+            height: 400px;
+            margin: 20px auto;
+        }
+        path.slice {
+            stroke-width: 2px;
+        }
+        polyline {
+            opacity: .3;
+            stroke: black;
+            stroke-width: 2px;
+            fill: none;
+        }
+        .labelValue {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<a href="#main" class="skip">Skip to content</a>
+
+<header role="banner">
+    <nav class="high-contrast">
+        <ul>
+            <li><a href="/" tabindex="1">Homepage</a></li>
+            <li><a href="/about.html" tabindex="2">About</a></li>
+            <li><a href="/login.html" tabindex="3">Login</a></li>
+            <li><a href="https://google.com" tabindex="4">Google</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero">
+        <h1>Personal Budget</h1>
+        <h2>A personal-budget management app</h2>
+    </div>
+</header> 
+
+<main class="center" id="main">
+    <section class="page-area">
+        <article>
+            <h1>Stay on track</h1>
+            <p>
+                Do you know where you are spending your money? If you really stop to track it down,
+                you would get surprised! Proper budget management depends on real data... and this
+                app will help you with that!
+            </p>
+        </article>
+    
+        <article>
+            <h1>Alerts</h1>
+            <p>
+                What if your clothing budget ended? You will get an alert. The goal is to never go over the budget.
+            </p>
+        </article>
+
+        <article>
+            <h1>Results</h1>
+            <p>
+                People who stick to a financial plan, budgeting every expense, get out of debt faster!
+                Also, they to live happier lives... since they expend without guilt or fear... 
+                because they know it is all good and accounted for.
+            </p>
+        </article>
+
+        <article>
+            <h1>Free</h1>
+            <p>
+                This app is free!!! And you are the only one holding your data!
+            </p>
+        </article>
+
+        <article>
+            <h1>Stay on track</h1>
+            <p>
+                Do you know where you are spending your money? If you really stop to track it down,
+                you would get surprised! Proper budget management depends on real data... and this
+                app will help you with that!
+            </p>
+        </article>
+
+        <article>
+            <h1>Alerts</h1>
+            <p>
+                What if your clothing budget ended? You will get an alert. The goal is to never go over the budget.
+            </p>
+        </article>
+
+        <article>
+            <h1>Results</h1>
+            <p>
+                People who stick to a financial plan, budgeting every expense, get out of debt faster!
+                Also, they to live happier lives... since they expend without guilt or fear... 
+                because they know it is all good and accounted for.
+            </p>
+        </article>
+
+        <article>
+            <h1>Chart.js</h1>
+            <p>
+                <canvas id="myChart" width="400" height="400" aria-label="Budget distribution chart"></canvas>
+            </p>
+        </article>
+
+        <article>
+            <h1>D3.js Chart</h1>
+            <p>
+                <div class="d3-chart-container" id="d3-chart"></div>
+            </p>
+        </article>
+
+    </section> 
+</main>
+
+<footer class="bottom">
+    <div class="center">
+        All rights reserved &copy; Fabio Nolasco
+    </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js" integrity="sha512-quHCp3WbBNkwLfYUMd+KwBAgpVukJu5MncuQaWXgCrfgcxCJAq/fo+oqrRKOj+UKEmyMCG3tb8RB63W+EmrOBg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js" integrity="sha512-s+xg36jbIujB2S2VKfpGmlC3T5V2TF3lY48DX7u2r9XzGzgPsa6wTpOQA7J9iffvdeBN0q9tKzRxVxw1JviZPg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+
+<script>
+// Existing Chart.js code
+var dataSource = {
+    datasets: [
+        {
+            data: [],
+            backgroundColor: [
+                '#ffcd56',
+                '#ff6384',
+                '#36a2eb',
+                '#fd6b19',
+            ]
+        }
+    ],
+    labels: []
+};
+
+let myPieChart = null;  // Global variable to track chart instance
+
+function createChart() {
+    console.log('!!! Creating chart with data:', JSON.stringify(dataSource, null, 2));
+    
+    var ctx = document.getElementById('myChart');
+    if (!ctx) {
+        console.error('!!! Canvas element not found');
+        return;
+    }
+
+    // Check if Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        console.error('!!! Chart.js is not loaded');
+        return;
+    }
+    
+    // Log canvas dimensions
+    console.log('!!! Canvas dimensions:', {
+        width: ctx.width,
+        height: ctx.height,
+        clientWidth: ctx.clientWidth,
+        clientHeight: ctx.clientHeight
+    });
+
+    // If there's an existing chart, destroy it
+    if (myPieChart) {
+        myPieChart.destroy();
+    }
+
+    myPieChart = new Chart(ctx.getContext('2d'), {
+        type: 'pie',
+        data: dataSource,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 2000
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+}
+
+// Create D3.js chart
+function createD3Chart(data) {
+    console.log('!!! D3 Chart Creation - Input data:', data);
+
+    // Ensure we have valid data
+    if (!Array.isArray(data) || data.length === 0) {
+        console.error('!!! Invalid data for D3 chart:', data);
+        return;
+    }
+
+    // Clear any existing chart
+    d3.select("#d3-chart").html("");
+    console.log('!!! Cleared existing D3 chart');
+
+    var width = 400,
+        height = 400,
+        radius = Math.min(width, height) / 2;
+
+    console.log('!!! D3 Chart dimensions:', { width, height, radius });
+
+    var svg = d3.select("#d3-chart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+    console.log('!!! Created SVG container');
+
+    // Create groups for different parts of the chart
+    svg.append("g").attr("class", "slices");
+    svg.append("g").attr("class", "labels");
+    svg.append("g").attr("class", "lines");
+
+    // Configure the pie layout
+    var pie = d3.layout.pie()
+        .sort(null)
+        .value(function(d) {
+            console.log('!!! Pie value calculation for:', d.label, '=', d.value);
+            return d.value;  // Use the processed value directly
+        });
+
+    console.log('!!! Configured pie layout');
+
+    // Configure the arcs
+    var arc = d3.svg.arc()
+        .outerRadius(radius * 0.8)
+        .innerRadius(radius * 0.4);
+
+    var outerArc = d3.svg.arc()
+        .innerRadius(radius * 0.9)
+        .outerRadius(radius * 0.9);
+
+    var color = d3.scale.ordinal()
+        .range(['#ffcd56', '#ff6384', '#36a2eb', '#fd6b19', '#83FF33', '#FF33F3', '#FF3333']);
+
+    // Process and validate the data
+    var processedData = data.map(function(d) {
+        const processedItem = {
+            label: d.title || d.name || 'Unnamed',
+            value: parseFloat(d.budget || d.amount) || 0
+        };
+        console.log('!!! Processing data item:', d, ' -> ', processedItem);
+        return processedItem;
+    }).filter(function(d) {
+        const isValid = !isNaN(d.value) && d.value > 0;
+        console.log('!!! Filtering data item:', d, 'isValid:', isValid);
+        return isValid;
+    });
+
+    console.log('!!! Final processed data:', processedData);
+
+    /* ------- PIE SLICES -------*/
+    var slice = svg.select(".slices").selectAll("path.slice")
+        .data(pie(processedData));
+
+    slice.enter()
+        .insert("path")
+        .style("fill", function(d) { return color(d.data.label); })
+        .attr("class", "slice");
+
+    slice.transition().duration(1000)
+        .attrTween("d", function(d) {
+            this._current = this._current || d;
+            var interpolate = d3.interpolate(this._current, d);
+            this._current = interpolate(0);
+            return function(t) {
+                return arc(interpolate(t));
+            };
+        });
+
+    /* ------- TEXT LABELS -------*/
+    var text = svg.select(".labels").selectAll("text")
+        .data(pie(processedData));
+
+    text.enter()
+        .append("text")
+        .attr("dy", ".35em")
+        .text(function(d) {
+            return d.data.label;
+        });
+
+    function midAngle(d){
+        return d.startAngle + (d.endAngle - d.startAngle)/2;
+    }
+
+    text.transition().duration(1000)
+        .attrTween("transform", function(d) {
+            this._current = this._current || d;
+            var interpolate = d3.interpolate(this._current, d);
+            this._current = interpolate(0);
+            return function(t) {
+                var d2 = interpolate(t);
+                var pos = outerArc.centroid(d2);
+                pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+                return "translate("+ pos +")";
+            };
+        })
+        .styleTween("text-anchor", function(d){
+            this._current = this._current || d;
+            var interpolate = d3.interpolate(this._current, d);
+            this._current = interpolate(0);
+            return function(t) {
+                var d2 = interpolate(t);
+                return midAngle(d2) < Math.PI ? "start":"end";
+            };
+        });
+
+    /* ------- SLICE TO TEXT POLYLINES -------*/
+    var polyline = svg.select(".lines").selectAll("polyline")
+        .data(pie(processedData));
+
+    polyline.enter()
+        .append("polyline");
+
+    polyline.transition().duration(1000)
+        .attrTween("points", function(d){
+            this._current = this._current || d;
+            var interpolate = d3.interpolate(this._current, d);
+            this._current = interpolate(0);
+            return function(t) {
+                var d2 = interpolate(t);
+                var pos = outerArc.centroid(d2);
+                pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+                return [arc.centroid(d2), outerArc.centroid(d2), pos];
+            };
+        });
+}
+
+function getBudget() {
+    console.log('!!! Fetching budget data...');
+    
+    axios.get('http://localhost:3000/budget')
+        .then(function (res) {
+            console.log('!!! Received data:', res.data);
+            
+            // Handle both data structure possibilities
+            const budgetData = res.data.myBudget || res.data.categories;
+            if (!budgetData) {
+                console.error('!!! Invalid data structure received');
+                return;
+            }
+
+            // Clear any existing data
+            dataSource.datasets[0].data = [];
+            dataSource.labels = [];
+
+            for (var i = 0; i < budgetData.length; i++) {
+                const budget = parseFloat(budgetData[i].budget || budgetData[i].amount) || 0;
+                const title = budgetData[i].title || budgetData[i].name || 'Category ' + (i + 1);
+                
+                if (!isNaN(budget) && budget > 0) {
+                    dataSource.datasets[0].data[i] = budget;
+                    dataSource.labels[i] = title;
+                }
+            }
+            
+            // Log the processed data
+            console.log('!!! Processed data:', {
+                labels: dataSource.labels,
+                data: dataSource.datasets[0].data
+            });
+
+            // Create both charts
+            createChart();
+            createD3Chart(budgetData);
+        })
+        .catch(function(error) {
+            console.error('!!! Error fetching budget data:', error);
+        });
+}
+
+// Wait for DOM and ensure dependencies are loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Check dependencies
+    if (!window.axios) {
+        console.error('!!! Axios is not loaded');
+        return;
+    }
+    if (!window.Chart) {
+        console.error('!!! Chart.js is not loaded');
+        return;
+    }
+    if (!window.d3) {
+        console.error('!!! D3.js is not loaded');
+        return;
+    }
+    
+    console.log('!!! DOM loaded, starting application...');
+    getBudget();
+});
+</script>
+
+<script type="application/ld+json"> 
+    {
+        "@context": "http://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Personal Budget",
+        "description": "A free personal budget management app to track your expenses effectively.",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "All platforms",
+        "offers": {
+            "@type": "Offer",
+            "price": "0.00",
+            "priceCurrency": "USD"
+        }
+    }
+</script>
+
+</body>
+</html>
